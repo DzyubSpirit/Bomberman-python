@@ -1,7 +1,11 @@
+import numpy as np
+
+from src import constants as consts
 
 
 class Player(object):
     """Klasa obsługująca poszczególnych graczy."""
+
     def __init__(self, name, x, y):
         """Domyślne ustawienia klasy
 
@@ -16,6 +20,9 @@ class Player(object):
         self.pos_y = y
         self.bombs = 1
         self.isDead = False
+
+    def action(self, board):
+        return np.random.randint(consts.DO_NOTHING, consts.PLANT_BOMB)
 
     def move(self, x, y):
         """Przesunięcie gracza na daną pozycje

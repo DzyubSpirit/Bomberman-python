@@ -20,7 +20,7 @@ class Window(QMainWindow):
         self.centralWidget = QStackedWidget()
         self.setCentralWidget(self.centralWidget)
         self.mainMenuWidget = MainMenu()
-        self.game = game.Game(1)
+        self.game = game.Game(['test', 'test2'])
         self.menu()
 
         self.setWindowTitle('Bomberman')

@@ -4,10 +4,17 @@ import random
 from src import constants as consts
 from src import player
 
+playerInitialPositions = [
+    [],
+    [(1, 1)],
+    [(1, 1), (consts.BOARD_WIDTH - 2, consts.BOARD_HEIGHT - 2)],
+]
+
 
 class Board(object):
     """Klasa obsługująca tworzenie i zarządzanie planszą."""
-    def __init__(self, players):
+
+    def __init__(self, playerNames):
         """Domyślne ustawienia klasy
 
             Args:
@@ -18,8 +25,9 @@ class Board(object):
         self.height = consts.BOARD_HEIGHT
         self.tiles = np.zeros((self.width, self.height), dtype=int)
 
-        self.players = players
-        self.player_1 = player.Player('Gracz 1', 1, 1)
+        initPos = playerInitialPositions[len(playerNames)]
+        self.players = [
+            player.Player(name, initPos[i][0], initPos[i][1]) for i, name in enumerate(playerNames)]
 
         self.create_board()
         self.board_history = []
@@ -30,6 +38,9 @@ class Board(object):
                     str(self.tiles[x, y]) + '*!'
                 self.board_history.append(move)
         self.board_history.append('#')
+
+    def all_dead(self):
+        return all([player.isDead for player in self.players])
 
     def create_board(self):
         """Tworzenie planszy"""
@@ -47,53 +58,19 @@ class Board(object):
         # Tworzenie losowej siatki zniszczalnych murów
         for i in range(1, self.width - 1):
             for j in range(1, self.height - 1):
-                self.tiles[i, j] = random.randint(const.GRASS, const.WOOD)
-        self.tiles[2::2, ::2] = const.WALL  # Zapełnienie siatką murów co 2 wiersz i kolumnę
+                self.tiles[i, j] = random.randint(consts.GRASS, consts.WOOD)
+        # Zapełnienie siatką murów co 2 wiersz i kolumnę
+        self.tiles[2::2, ::2] = consts.WALL
 
-        # Czyszczenie pól startowych graczy i umiejscowienie graczy na polach startowych
-        if self.players == 1:
-            for k in [0, 1, 2]:
-                if self.tiles[1, k] != const.WALL:
-                    self.tiles[1, k] = const.GRASS
-            for k in [0, 1, 2]:
-                if self.tiles[k, 1] != const.WALL:
-                    self.tiles[k, 1] = const.GRASS
-            self.tiles[self.player_1.get_pos_x(), self.player_1.get_pos_y()] = const.PLAYER_FRONT
-
-        if self.players == 2:
-            for i, j in ([1, 1], [self.width - 2, self.height - 2]):
-                for k in [j - 1, j, j + 1]:
-                    if self.tiles[i, k] != const.WALL:
-                        self.tiles[i, k] = const.GRASS
-                for k in [i - 1, i, i + 1]:
-                    if self.tiles[k, j] != const.WALL:
-                        self.tiles[k, j] = const.GRASS
-                self.tiles[i, j] = const.PLAYER_FRONT
-
-        if self.players == 3:
-            p = 3
-            for i in [1, self.width - 2]:
-                for j in [self.height - 2, 1]:
-                    if p != 0:
-                        for k in [j - 1, j, j + 1]:
-                            if self.tiles[i, k] != const.WALL:
-                                self.tiles[i, k] = const.GRASS
-                        for k in [i - 1, i, i + 1]:
-                            if self.tiles[k, j] != const.WALL:
-                                self.tiles[k, j] = const.GRASS
-                        self.tiles[i, j] = const.PLAYER_FRONT
-                        p -= 1
-
-        if self.players >= 4:
-            for i in [1, self.width - 2]:
-                for j in [1, self.height - 2]:
-                    for k in [j - 1, j, j + 1]:
-                        if self.tiles[i, k] != const.WALL:
-                            self.tiles[i, k] = const.GRASS
-                    for k in [i - 1, i, i + 1]:
-                        if self.tiles[k, j] != const.WALL:
-                            self.tiles[k, j] = const.GRASS
-                    self.tiles[i, j] = const.PLAYER_FRONT
+        initPos = playerInitialPositions[len(self.players)]
+        for player in self.players:
+            for iy in range(player.pos_y - 1, player.pos_y + 2):
+                if self.tiles[player.pos_x, iy] != consts.WALL:
+                    self.tiles[player.pos_x, iy] = consts.GRASS
+            for ix in range(player.pos_x - 1, player.pos_x + 2):
+                if self.tiles[ix, player.pos_y] != consts.WALL:
+                    self.tiles[ix, player.pos_y] = consts.GRASS
+            self.tiles[player.pos_x, player.pos_y] = consts.PLAYER_FRONT
 
     def save_change(self, previous_board):
         """Zapisuje zmianę pól planszy pomiędzy kolejnymi klatkami
@@ -121,12 +98,12 @@ class Board(object):
                 True - jeżeli jest możliwy taki ruch
 
         """
-        if self.tiles[x, y] != const.WALL and self.tiles[x, y] != const.WOOD and self.tiles[x, y] != const.BOMB:
+        if self.tiles[x, y] != consts.WALL and self.tiles[x, y] != consts.WOOD and self.tiles[x, y] != consts.BOMB:
             return True
         else:
             return False
 
-    def move(self, x, y):
+    def move(self, player_id, x, y):
         """Przesunięcie gracza na daną pozycje
 
             Args:
@@ -134,12 +111,13 @@ class Board(object):
                 y (int): Pozycja y bomby
 
         """
-        if self.tiles[self.player_1.get_pos_x(), self.player_1.get_pos_y()] == const.PLAYER_FRONT:
-            self.tiles[self.player_1.get_pos_x(), self.player_1.get_pos_y()] = const.GRASS
+        player = self.players[player_id]
+        if self.tiles[player.pos_x, player.pos_y] == consts.PLAYER_FRONT:
+            self.tiles[player.pos_x, player.pos_y] = consts.GRASS
         else:
-            self.tiles[self.player_1.get_pos_x(), self.player_1.get_pos_y()] = const.BOMB
-        self.player_1.move(x, y)
-        self.tiles[x, y] = const.PLAYER_FRONT
+            self.tiles[player.pos_x, player.pos_y] = consts.BOMB
+        player.move(x, y)
+        self.tiles[x, y] = consts.PLAYER_FRONT
 
     def place_bomb(self, x, y):
         """Ustawienie bomby na danej pozycji
@@ -180,49 +158,27 @@ class Board(object):
                 y (int): Pozycja y początku eksplozji
 
         """
-        for i in [x, x - 1, x - 2, x - 3, x - 4, x - 5]:
-            if self.player_1.get_pos_x() == i and self.player_1.get_pos_y() == y:
-                self.player_1.isDead = True
-            if self.tiles[i, y] == const.WOOD:
-                self.tiles[i, y] = const.EXPLOSION
-                break
-            if self.tiles[i, y] != const.WALL:
-                self.tiles[i, y] = const.EXPLOSION
-            else:
-                break
+        rays = [
+            [(ix, y) for ix in range(x, x - consts.EXPLOSION_LENGTH - 1)],
+            [(ix, y) for ix in range(x, x + consts.EXPLOSION_LENGTH + 1)],
+            [(x, iy) for iy in range(y, y - consts.EXPLOSION_LENGTH - 1)],
+            [(x, iy) for iy in range(y, y + consts.EXPLOSION_LENGTH + 1)],
+        ]
 
-        for i in [x + 1, x + 2, x + 3, x + 4, x + 5]:
-            if self.player_1.get_pos_x() == i and self.player_1.get_pos_y() == y:
-                self.player_1.isDead = True
-            if self.tiles[i, y] == const.WOOD:
-                self.tiles[i, y] = const.EXPLOSION
-                break
-            if self.tiles[i, y] != const.WALL:
-                self.tiles[i, y] = const.EXPLOSION
-            else:
-                break
+        for ray in rays:
+            for x, y in ray:
+                if self.tiles[x, y] == consts.WALL:
+                    break
+                if self.tiles[x, y] == consts.WOOD:
+                    self.tiles[x, y] = consts.EXPLOSION
+                    break
 
-        for i in [y, y - 1, y - 2, y - 3, y - 4, y - 5]:
-            if self.player_1.get_pos_x() == x and self.player_1.get_pos_y() == i:
-                self.player_1.isDead = True
-            if self.tiles[x, i] == const.WOOD:
-                self.tiles[x, i] = const.EXPLOSION
-                break
-            if self.tiles[x, i] != const.WALL:
-                self.tiles[x, i] = const.EXPLOSION
-            else:
-                break
+                for player in self.players:
+                    if player.pos_x == x and player.pos_y == y:
+                        player.isDead = True
+                        break
 
-        for i in [y + 1, y + 2, y + 3, y + 4, y + 5]:
-            if self.player_1.get_pos_x() == x and self.player_1.get_pos_y() == i:
-                self.player_1.isDead = True
-            if self.tiles[x, i] == const.WOOD:
-                self.tiles[x, i] = const.EXPLOSION
-                break
-            if self.tiles[x, i] != const.WALL:
-                self.tiles[x, i] = const.EXPLOSION
-            else:
-                break
+                self.tiles[x, y] = consts.EXPLOSION
 
     def clear_explosion(self, x, y):
         """Czyszczenie efektu eksplozji bomby

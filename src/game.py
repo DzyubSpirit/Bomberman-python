@@ -13,7 +13,8 @@ from src import board
 
 class Game(QWidget):
     """Klasa obsługująca mechanikę gry"""
-    def __init__(self, players):
+
+    def __init__(self, playerNames):
         """Domyślne ustawienia klasy
 
             Args:
@@ -23,9 +24,9 @@ class Game(QWidget):
         super(Game, self).__init__()
         qApp.installEventFilter(self)
         self.released = True
-        self.players = players
+        self.playerNames = playerNames
 
-        self.board = board.Board(players)
+        self.board = board.Board(playerNames)
         self.timers = []
         self.timer = QTimer()
         self.timer.setInterval(consts.GAME_SPEED)
@@ -33,7 +34,7 @@ class Game(QWidget):
         self.timer.start()
 
         self.nr_frame = 0
-        if self.players != 0:
+        if len(self.playerNames) != 0:
             self.frames = []
             self.frame = np.ones(
                 (consts.BOARD_WIDTH, consts.BOARD_HEIGHT), dtype=int)
@@ -42,6 +43,12 @@ class Game(QWidget):
         else:
             doc = xml.parse("autosave.xml")
             self.frames = doc.getElementsByTagName("frame")
+
+    def start(self):
+        self.botTimer = QTimer(self)
+        self.botTimer.setInterval(consts.BOT_SPEED)
+        self.botTimer.timeout.connect(self.do_bot_actions)
+        self.botTimer.start()
 
     def paintEvent(self, event):
         """Obsługa rysowania na ekranie"""
@@ -56,7 +63,7 @@ class Game(QWidget):
         height = consts.TILE_HEIGHT
 
         self.nr_frame += 1
-        if self.players == 0:
+        if len(self.playerNames) == 0:
             self.get_from_xml()
 
         for x in range(consts.BOARD_WIDTH):
@@ -86,42 +93,13 @@ class Game(QWidget):
                     painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
                         '../res/images/wall.png'))
 
-        if self.players != 0:
+        if len(self.playerNames) != 0:
             self.check_changes()
 
     def eventFilter(self, obj, event):
         """Obsługa klawiatury"""
         if event.type() == QEvent.KeyRelease:
             self.released = True
-
-        if event.type() == QEvent.KeyPress and self.released and self.players != 0:
-            self.released = False
-            if not self.board.player_1.isDead:
-                x = self.board.player_1.get_pos_x()
-                y = self.board.player_1.get_pos_y()
-
-                if event.key() == Qt.Key_W:
-                    if self.board.try_move(x, y - 1):
-                        self.board.move(x, y - 1)
-                elif event.key() == Qt.Key_S:
-                    if self.board.try_move(x, y + 1):
-                        self.board.move(x, y + 1)
-                elif event.key() == Qt.Key_A:
-                    if self.board.try_move(x - 1, y):
-                        self.board.move(x - 1, y)
-                elif event.key() == Qt.Key_D:
-                    if self.board.try_move(x + 1, y):
-                        self.board.move(x + 1, y)
-                elif event.key() == Qt.Key_F:
-                    x, y = self.board.player_1.place_bomb()
-                    if x != 0 and y != 0:
-                        self.board.place_bomb(x, y)
-                        self.timers.append(QTimer())
-                        self.timers[len(self.timers) - 1].setInterval(const.BOMB_SPEED)
-                        timer = self.timers[len(self.timers) - 1]
-                        timer.timeout.connect(lambda: self.explode(x, y))
-                        timer.timeout.connect(timer.stop)
-                        timer.start()
 
         return super(Game, self).eventFilter(obj, event)
 
@@ -149,8 +127,11 @@ class Game(QWidget):
             self.frame = np.copy(self.board.tiles)
             self.frames.append(self.nr_frame)
 
-        if self.board.player_1.isDead:
+        if self.board.all_dead():
             self.save_xml()
+
+    def do_bot_actions(self):
+        self.board.do_bot_actions()
 
     def save_xml(self):
         """Zapisywanie rozgrywki do dokumentu XML"""
