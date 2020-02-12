@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-from src import constants as const
+from src import constants as consts
 from src import player
 
 
@@ -14,8 +14,8 @@ class Board(object):
                 players (int): Ilość wszystkich graczy
 
         """
-        self.width = const.BOARD_WIDTH
-        self.height = const.BOARD_HEIGHT
+        self.width = consts.BOARD_WIDTH
+        self.height = consts.BOARD_HEIGHT
         self.tiles = np.zeros((self.width, self.height), dtype=int)
 
         self.players = players
@@ -26,8 +26,9 @@ class Board(object):
 
         for x in range(self.width):
             for y in range(self.height):
-                    move = '@' + str(x) + '*' + str(y) + '*' + str(self.tiles[x, y]) + '*!'
-                    self.board_history.append(move)
+                move = '@' + str(x) + '*' + str(y) + '*' + \
+                    str(self.tiles[x, y]) + '*!'
+                self.board_history.append(move)
         self.board_history.append('#')
 
     def create_board(self):
@@ -36,12 +37,12 @@ class Board(object):
         # Tworzenie murów
         for i in range(self.width):
             for j in range(self.height):
-                self.tiles[i, j] = const.WALL
+                self.tiles[i, j] = consts.WALL
 
         # Tworzenie trawy
         for i in range(1, self.width - 1):
             for j in range(1, self.height - 1):
-                self.tiles[i, j] = const.GRASS
+                self.tiles[i, j] = consts.GRASS
 
         # Tworzenie losowej siatki zniszczalnych murów
         for i in range(1, self.width - 1):
@@ -103,7 +104,8 @@ class Board(object):
         for x in range(self.width):
             for y in range(self.height):
                 if previous_board[x, y] != self.tiles[x, y]:
-                    move = '@' + str(x) + '*' + str(y) + '*' + str(self.tiles[x, y]) + '*!'
+                    move = '@' + str(x) + '*' + str(y) + '*' + \
+                        str(self.tiles[x, y]) + '*!'
                     self.board_history.append(move)
 
         self.board_history.append('#')
@@ -148,7 +150,27 @@ class Board(object):
 
         """
         if x != 0 and y != 0:
-            self.tiles[x, y] = const.BOMB
+            self.tiles[x, y] = consts.BOMB
+
+    def do_bot_actions(self):
+        for i, player in enumerate(self.players):
+            action = player.action(self)
+            if action == consts.DO_NOTHING:
+                continue
+            if action == consts.PLANT_BOMB:
+                self.place_bomb(player.pos_x, player.pos_y)
+                continue
+
+            moves = {
+                consts.MOVE_LEFT: (-1, 0),
+                consts.MOVE_UP: (0, -1),
+                consts.MOVE_RIGHT: (1, 0),
+                consts.MOVE_DOWN: (0, 1),
+            }
+            dx, dy = moves[action]
+            nx, ny = player.pos_x + dx, player.pos_y + dy
+            if self.try_move(nx, ny):
+                self.move(i, nx, ny)
 
     def explode(self, x, y):
         """Tworzy efekt eksplozji bomby
@@ -211,17 +233,17 @@ class Board(object):
 
         """
         for i in [x, x - 1, x - 2, x - 3, x - 4, x - 5]:
-            if self.tiles[i, y] == const.EXPLOSION:
-                self.tiles[i, y] = const.GRASS
+            if self.tiles[i, y] == consts.EXPLOSION:
+                self.tiles[i, y] = consts.GRASS
 
         for i in [x + 1, x + 2, x + 3, x + 4, x + 5]:
-            if self.tiles[i, y] == const.EXPLOSION:
-                self.tiles[i, y] = const.GRASS
+            if self.tiles[i, y] == consts.EXPLOSION:
+                self.tiles[i, y] = consts.GRASS
 
         for i in [y, y - 1, y - 2, y - 3, y - 4, y - 5]:
-            if self.tiles[x, i] == const.EXPLOSION:
-                self.tiles[x, i] = const.GRASS
+            if self.tiles[x, i] == consts.EXPLOSION:
+                self.tiles[x, i] = consts.GRASS
 
         for i in [y + 1, y + 2, y + 3, y + 4, y + 5]:
-            if self.tiles[x, i] == const.EXPLOSION:
-                self.tiles[x, i] = const.GRASS
+            if self.tiles[x, i] == consts.EXPLOSION:
+                self.tiles[x, i] = consts.GRASS

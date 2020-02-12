@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPainter, QPixmap
 import xml.dom.minidom as xml
 import numpy as np
 
-from src import constants as const
+from src import constants as consts
 from src import board
 
 # noinspection PyArgumentList
@@ -28,14 +28,15 @@ class Game(QWidget):
         self.board = board.Board(players)
         self.timers = []
         self.timer = QTimer()
-        self.timer.setInterval(const.GAME_SPEED)
+        self.timer.setInterval(consts.GAME_SPEED)
         self.timer.timeout.connect(self.repaint)
         self.timer.start()
 
         self.nr_frame = 0
         if self.players != 0:
             self.frames = []
-            self.frame = np.ones((const.BOARD_WIDTH, const.BOARD_HEIGHT), dtype=int)
+            self.frame = np.ones(
+                (consts.BOARD_WIDTH, consts.BOARD_HEIGHT), dtype=int)
             self.doc = xml.Document()
             self.root = self.doc.createElement('save')
         else:
@@ -51,32 +52,39 @@ class Game(QWidget):
 
     def draw_board(self, painter):
         """Wyświetlenie planszy na ekranie"""
-        width = const.TILE_WIDTH
-        height = const.TILE_HEIGHT
+        width = consts.TILE_WIDTH
+        height = consts.TILE_HEIGHT
 
         self.nr_frame += 1
         if self.players == 0:
             self.get_from_xml()
 
-        for x in range(const.BOARD_WIDTH):
-            for y in range(const.BOARD_HEIGHT):
+        for x in range(consts.BOARD_WIDTH):
+            for y in range(consts.BOARD_HEIGHT):
                 pos_x = x * width
                 pos_y = y * height
 
-                if self.board.tiles[x, y] == const.WALL:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/wall.png'))
-                elif self.board.tiles[x, y] == const.GRASS:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/grass.png'))
-                elif self.board.tiles[x, y] == const.WOOD:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/wood.png'))
-                elif self.board.tiles[x, y] == const.PLAYER_FRONT:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/player_front.png'))
-                elif self.board.tiles[x, y] == const.BOMB:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/bomb.png'))
-                elif self.board.tiles[x, y] == const.EXPLOSION:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/explosion.png'))
+                if self.board.tiles[x, y] == consts.WALL:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/wall.png'))
+                elif self.board.tiles[x, y] == consts.GRASS:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/grass.png'))
+                elif self.board.tiles[x, y] == consts.WOOD:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/wood.png'))
+                elif self.board.tiles[x, y] == consts.PLAYER_FRONT:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/player_front.png'))
+                elif self.board.tiles[x, y] == consts.BOMB:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/bomb.png'))
+                elif self.board.tiles[x, y] == consts.EXPLOSION:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/explosion.png'))
                 else:
-                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap('../res/images/wall.png'))
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/wall.png'))
 
         if self.players != 0:
             self.check_changes()
@@ -128,7 +136,7 @@ class Game(QWidget):
         self.board.explode(x, y)
         self.board.player_1.give_bomb()
         self.timers.append(QTimer())
-        self.timers[len(self.timers) - 1].setInterval(const.EXPLOSION_SPEED)
+        self.timers[len(self.timers) - 1].setInterval(consts.EXPLOSION_SPEED)
         timer = self.timers[len(self.timers) - 1]
         timer.timeout.connect(lambda: self.board.clear_explosion(x, y))
         timer.timeout.connect(timer.stop)
@@ -165,7 +173,8 @@ class Game(QWidget):
                 element = self.board.board_history[i]
 
         self.doc.appendChild(self.root)
-        self.doc.writexml(open('autosave.xml', 'w'), indent="  ", addindent="  ", newl='\n')
+        self.doc.writexml(open('autosave.xml', 'w'),
+                          indent="  ", addindent="  ", newl='\n')
         self.doc.unlink()
 
     def get_from_xml(self):
