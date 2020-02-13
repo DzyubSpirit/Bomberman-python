@@ -1,3 +1,5 @@
+from PyQt5.QtCore import QTimer
+
 import numpy as np
 import random
 
@@ -119,24 +121,29 @@ class Board(object):
         player.move(x, y)
         self.tiles[x, y] = consts.PLAYER_FRONT
 
-    def place_bomb(self, x, y):
-        """Ustawienie bomby na danej pozycji
+    def place_bomb(self, game, player):
+        """Ustawienie bomby na danej pozycji"""
+        if not player.place_bomb():
+            return
 
-            Args:
-                x (int): Pozycja x bomby
-                y (int): Pozycja y bomby
+        x, y = player.pos_x, player.pos_y
+        self.tiles[x, y] = consts.BOMB
 
-        """
-        if x != 0 and y != 0:
-            self.tiles[x, y] = consts.BOMB
+        timer = QTimer(game)
+        timer.setInterval(consts.BOMB_SPEED)
+        timer.timeout.connect(lambda: game.explode(player, x, y))
+        timer.timeout.connect(timer.stop)
 
-    def do_bot_actions(self):
+        game.timers.append(timer)
+        timer.start()
+
+    def do_bot_actions(self, game):
         for i, player in enumerate(self.players):
             action = player.action(self)
             if action == consts.DO_NOTHING:
                 continue
             if action == consts.PLANT_BOMB:
-                self.place_bomb(player.pos_x, player.pos_y)
+                self.place_bomb(game, player)
                 continue
 
             moves = {
@@ -150,23 +157,22 @@ class Board(object):
             if self.try_move(nx, ny):
                 self.move(i, nx, ny)
 
-    def explode(self, x, y):
+    def explode(self, bomb_x, bomb_y):
         """Tworzy efekt eksplozji bomby
 
             Args:
-                x (int): Pozycja x początku eksplozji
-                y (int): Pozycja y początku eksplozji
+                bomb_x (int): Pozycja x początku eksplozji
+                bomb_y (int): Pozycja y początku eksplozji
 
         """
-        rays = [
-            [(ix, y) for ix in range(x, x - consts.EXPLOSION_LENGTH - 1)],
-            [(ix, y) for ix in range(x, x + consts.EXPLOSION_LENGTH + 1)],
-            [(x, iy) for iy in range(y, y - consts.EXPLOSION_LENGTH - 1)],
-            [(x, iy) for iy in range(y, y + consts.EXPLOSION_LENGTH + 1)],
-        ]
+        self.tiles[bomb_x, bomb_y] = consts.EXPLOSION
 
-        for ray in rays:
-            for x, y in ray:
+        for ray in consts.EXPLOSION_RAYS:
+            for dx, dy in ray:
+                x, y = bomb_x + dx, bomb_y + dy
+                if x < 0 or y < 0 or x >= self.width or y >= self.height:
+                    break
+
                 if self.tiles[x, y] == consts.WALL:
                     break
                 if self.tiles[x, y] == consts.WOOD:
@@ -180,26 +186,20 @@ class Board(object):
 
                 self.tiles[x, y] = consts.EXPLOSION
 
-    def clear_explosion(self, x, y):
+    def clear_explosion(self, bomb_x, bomb_y):
         """Czyszczenie efektu eksplozji bomby
 
             Args:
-                x (int): Pozycja x początku eksplozji
-                y (int): Pozycja y początku eksplozji
+                bomb_x (int): Pozycja x początku eksplozji
+                bomb_y (int): Pozycja y początku eksplozji
 
         """
-        for i in [x, x - 1, x - 2, x - 3, x - 4, x - 5]:
-            if self.tiles[i, y] == consts.EXPLOSION:
-                self.tiles[i, y] = consts.GRASS
+        self.tiles[bomb_x, bomb_y] = consts.GRASS
+        for ray in consts.EXPLOSION_RAYS:
+            for dx, dy in ray:
+                x, y = bomb_x + dx, bomb_y + dy
+                if x < 0 or y < 0 or x >= self.width or y >= self.height:
+                    break
 
-        for i in [x + 1, x + 2, x + 3, x + 4, x + 5]:
-            if self.tiles[i, y] == consts.EXPLOSION:
-                self.tiles[i, y] = consts.GRASS
-
-        for i in [y, y - 1, y - 2, y - 3, y - 4, y - 5]:
-            if self.tiles[x, i] == consts.EXPLOSION:
-                self.tiles[x, i] = consts.GRASS
-
-        for i in [y + 1, y + 2, y + 3, y + 4, y + 5]:
-            if self.tiles[x, i] == consts.EXPLOSION:
-                self.tiles[x, i] = consts.GRASS
+                if self.tiles[x, y] == consts.EXPLOSION:
+                    self.tiles[x, y] = consts.GRASS

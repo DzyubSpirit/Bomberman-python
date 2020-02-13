@@ -9,8 +9,16 @@ TILE_HEIGHT = 32
 GAME_SPEED = 100
 BOT_SPEED = 500
 BOMB_SPEED = 3000
+
 EXPLOSION_SPEED = 500
 EXPLOSION_LENGTH = 5
+EXPLOSION_RAYS = [
+    [(ix, 0) for ix in range(1, EXPLOSION_LENGTH + 1)],
+    [(ix, 0) for ix in range(-1, -EXPLOSION_LENGTH - 1, -1)],
+    [(0, iy) for iy in range(1, EXPLOSION_LENGTH + 1)],
+    [(0, iy) for iy in range(-1, -EXPLOSION_LENGTH - 1, -1)],
+]
+
 
 WALL = 0
 GRASS = 1

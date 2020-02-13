@@ -22,7 +22,7 @@ class Player(object):
         self.isDead = False
 
     def action(self, board):
-        return np.random.randint(consts.DO_NOTHING, consts.PLANT_BOMB)
+        return np.random.randint(consts.DO_NOTHING, consts.PLANT_BOMB+1)
 
     def move(self, x, y):
         """Przesunięcie gracza na daną pozycje
@@ -63,9 +63,9 @@ class Player(object):
         """
         if self.bombs >= 1:
             self.bombs -= 1
-            return self.pos_x, self.pos_y
+            return True
         else:
-            return 0, 0
+            return False
 
     def give_bomb(self):
         """Daje graczowi bombę"""

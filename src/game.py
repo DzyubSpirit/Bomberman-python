@@ -47,7 +47,7 @@ class Game(QWidget):
     def start(self):
         self.botTimer = QTimer(self)
         self.botTimer.setInterval(consts.BOT_SPEED)
-        self.botTimer.timeout.connect(self.do_bot_actions)
+        self.botTimer.timeout.connect(lambda: self.board.do_bot_actions(self))
         self.botTimer.start()
 
     def paintEvent(self, event):
@@ -103,7 +103,7 @@ class Game(QWidget):
 
         return super(Game, self).eventFilter(obj, event)
 
-    def explode(self, x, y):
+    def explode(self, player, x, y):
         """Wybuch bomby
 
             Args:
@@ -112,12 +112,14 @@ class Game(QWidget):
 
         """
         self.board.explode(x, y)
-        self.board.player_1.give_bomb()
-        self.timers.append(QTimer())
-        self.timers[len(self.timers) - 1].setInterval(consts.EXPLOSION_SPEED)
-        timer = self.timers[len(self.timers) - 1]
+        player.give_bomb()
+
+        timer = QTimer(self)
+        timer.setInterval(consts.EXPLOSION_SPEED)
         timer.timeout.connect(lambda: self.board.clear_explosion(x, y))
         timer.timeout.connect(timer.stop)
+
+        self.timers.append(timer)
         timer.start()
 
     def check_changes(self):
@@ -129,9 +131,6 @@ class Game(QWidget):
 
         if self.board.all_dead():
             self.save_xml()
-
-    def do_bot_actions(self):
-        self.board.do_bot_actions()
 
     def save_xml(self):
         """Zapisywanie rozgrywki do dokumentu XML"""
