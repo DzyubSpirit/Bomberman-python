@@ -1,7 +1,9 @@
 import numpy as np
+import codecs, json
+import requests
 
 from src import constants as consts
-
+from src import board
 
 class Player(object):
     """Klasa obsługująca poszczególnych graczy."""
@@ -22,7 +24,18 @@ class Player(object):
         self.isDead = False
 
     def action(self, board):
+        a = board.tiles
+        b = a.tolist()
+        matrixstring = "{  field = "+json.dumps(b)
+        positionssting = " x = " + str(self.pos_x) + "y = " + str(self.pos_y)
+        #print(str(self.pos_x)+"Hello"+matrixstring)
+        
+        url = 'http://localhost:8080'
+        
+
+        x = requests.post(url, data = positionssting + matrixstring)
         return np.random.randint(consts.DO_NOTHING, consts.PLANT_BOMB+1)
+        
 
     def move(self, x, y):
         """Przesunięcie gracza na daną pozycje
