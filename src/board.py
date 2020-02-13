@@ -139,6 +139,9 @@ class Board(object):
 
     def do_bot_actions(self, game):
         for i, player in enumerate(self.players):
+            if player.isDead:
+                continue
+
             action = player.action(self)
             if action == consts.DO_NOTHING:
                 continue
@@ -166,6 +169,9 @@ class Board(object):
 
         """
         self.tiles[bomb_x, bomb_y] = consts.EXPLOSION
+        for player in self.players:
+            if player.pos_x == bomb_x and player.pos_y == bomb_y:
+                player.isDead = True
 
         for ray in consts.EXPLOSION_RAYS:
             for dx, dy in ray:
