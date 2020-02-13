@@ -1,10 +1,9 @@
-from PyQt5.QtCore import QTimer
-
 import numpy as np
 import random
 
 from src import constants as consts
 from src import player
+from src.game_timer import GameTimer
 
 playerInitialPositions = [
     [],
@@ -129,12 +128,10 @@ class Board(object):
         x, y = player.pos_x, player.pos_y
         self.tiles[x, y] = consts.BOMB
 
-        timer = QTimer(game)
+        timer = GameTimer(game)
         timer.setInterval(consts.BOMB_SPEED)
         timer.timeout.connect(lambda: game.explode(player, x, y))
         timer.timeout.connect(timer.stop)
-
-        game.timers.append(timer)
         timer.start()
 
     def do_bot_actions(self, game):
@@ -181,14 +178,10 @@ class Board(object):
 
                 if self.tiles[x, y] == consts.WALL:
                     break
-                if self.tiles[x, y] == consts.WOOD:
-                    self.tiles[x, y] = consts.EXPLOSION
-                    break
 
                 for player in self.players:
                     if player.pos_x == x and player.pos_y == y:
                         player.isDead = True
-                        break
 
                 self.tiles[x, y] = consts.EXPLOSION
 

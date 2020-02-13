@@ -7,6 +7,7 @@ import numpy as np
 
 from src import constants as consts
 from src import board
+from src.game_timer import GameTimer
 
 # noinspection PyArgumentList
 
@@ -27,11 +28,12 @@ class Game(QWidget):
         self.playerNames = playerNames
 
         self.board = board.Board(playerNames)
-        self.timers = []
-        self.timer = QTimer()
-        self.timer.setInterval(consts.GAME_SPEED)
-        self.timer.timeout.connect(self.repaint)
-        self.timer.start()
+        self.timers = set()
+
+        self.repaintTimer = QTimer(self)
+        self.repaintTimer.setInterval(consts.GAME_SPEED)
+        self.repaintTimer.timeout.connect(self.repaint)
+        self.repaintTimer.start()
 
         self.nr_frame = 0
         if len(self.playerNames) != 0:
@@ -96,6 +98,9 @@ class Game(QWidget):
         if len(self.playerNames) != 0:
             self.check_changes()
 
+        if self.board.all_dead() and len(self.timers) == 0:
+            self.repaintTimer.stop()
+
     def eventFilter(self, obj, event):
         """Obsługa klawiatury"""
         if event.type() == QEvent.KeyRelease:
@@ -114,12 +119,10 @@ class Game(QWidget):
         self.board.explode(x, y)
         player.give_bomb()
 
-        timer = QTimer(self)
+        timer = GameTimer(self)
         timer.setInterval(consts.EXPLOSION_SPEED)
         timer.timeout.connect(lambda: self.board.clear_explosion(x, y))
         timer.timeout.connect(timer.stop)
-
-        self.timers.append(timer)
         timer.start()
 
     def check_changes(self):
