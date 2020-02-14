@@ -6,6 +6,7 @@ from src import game, bots
 from src import constants as consts
 
 import sys
+import random
 
 # noinspection PyArgumentList
 
@@ -55,7 +56,9 @@ class Window(QMainWindow):
                     consts.BOARD_HEIGHT * consts.TILE_HEIGHT)
         self.center()
 
-        self.game.start(bots.get())
+        got_bots = bots.get()
+        random.shuffle(got_bots)
+        self.game.start(got_bots[:2])
 
     def replay(self):
         """Odtworzenie powtórki ostatniej gry"""
