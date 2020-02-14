@@ -1,7 +1,9 @@
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QWidget, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QWidget, QPushButton, QLabel
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QTimer#, Qt, QEvent
+from PyQt5.QtCore import Qt
+
 
 
 from src import game, bots
@@ -22,6 +24,7 @@ class Window(QMainWindow):
 #         self.centralWidget = QStackedWidget()
 #         self.setCentralWidget(self.centralWidget)
 #         self.mainMenuWidget = MainMenu()
+        self.ratingWidget = RatingMenu() 
         self.game = game.Game()
         self.setCentralWidget(self.game)
 #         self.menu()
@@ -34,15 +37,11 @@ class Window(QMainWindow):
         self.play()
 
     def reload_game(self):
+
+        QTimer.singleShot(1000, self.showRating)
+        self.game = game.Game()
         QTimer.singleShot(5000, self.play)
         
-#         self.endGameTimer = QTimer(self)
-#         self.endGameTimer.setInterval(consts.GAME_SPEED)
-#         self.endGameTimer.timeout.connect(self.repaint)
-#         self.endGameTimer.start(self.play)
-
-
-
 
     def center(self):
         """Wycentrowanie okna gry na ekranie"""
@@ -77,6 +76,10 @@ class Window(QMainWindow):
         random.shuffle(got_bots)
         self.game.start(got_bots[:2])
 
+    def showRating(self):
+
+        self.setCentralWidget(self.ratingWidget)
+                
     def replay(self):
         """Odtworzenie powtórki ostatniej gry"""
 
@@ -140,3 +143,22 @@ class MainMenu(QWidget):
     def quit(self):
         """Emituje sygnał wyjścia z gry"""
         self.quitGameSignal.emit()
+
+
+
+class RatingMenu(QMainWindow):
+
+    def __init__(self, *args, **kwargs):
+        super(RatingMenu, self).__init__(*args, **kwargs)
+
+        self.setWindowTitle("Rating Window")
+        playerRating = { "Jack" : 20, "Bob" : 30 }
+        label = QLabel(str(playerRating))
+
+        # The `Qt` namespace has a lot of attributes to customise
+        # widgets. See: http://doc.qt.io/qt-5/qt.html
+        label.setAlignment(Qt.AlignCenter)
+
+        # Set the central widget of the Window. Widget will expand
+        # to take up all the space in the window by default.
+        self.setCentralWidget(label)
