@@ -59,9 +59,7 @@ class Window(QMainWindow):
                     consts.BOARD_HEIGHT * consts.TILE_HEIGHT)
         self.center()
 
-        got_bots = bots.get()
-        random.shuffle(got_bots)
-        self.game.start(got_bots[:2])
+        self.game.start(bots.getN(2))
 
     def replay(self):
         """Odtworzenie powtórki ostatniej gry"""
