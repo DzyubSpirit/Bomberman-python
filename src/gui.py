@@ -17,16 +17,18 @@ class Window(QMainWindow):
     def __init__(self):
         """Domyślne ustawienia klasy"""
         super().__init__()
-
-        self.centralWidget = QStackedWidget()
-        self.setCentralWidget(self.centralWidget)
-        self.mainMenuWidget = MainMenu()
+#         self.centralWidget = QStackedWidget()
+#         self.setCentralWidget(self.centralWidget)
+#         self.mainMenuWidget = MainMenu()
         self.game = game.Game()
-        self.menu()
+        self.setCentralWidget(self.game)
+#         self.menu()
 
         self.setWindowTitle('Bomberman')
         self.setWindowIcon(QIcon('../res/images/icon.png'))
         self.show()
+
+        self.play()
 
     def center(self):
         """Wycentrowanie okna gry na ekranie"""
@@ -38,15 +40,16 @@ class Window(QMainWindow):
     def menu(self):
         """Pokazanie menu głównego"""
 
-        self.mainMenuWidget.playGameSignal.connect(self.play)
-        self.mainMenuWidget.playReplaySignal.connect(self.replay)
-        self.mainMenuWidget.quitGameSignal.connect(self.quit)
-
-        self.centralWidget.addWidget(self.mainMenuWidget)
-        self.centralWidget.setCurrentWidget(self.mainMenuWidget)
+#         self.mainMenuWidget.playGameSignal.connect(self.play)
+#         self.mainMenuWidget.playReplaySignal.connect(self.replay)
+#         self.mainMenuWidget.quitGameSignal.connect(self.quit)
+#
+#         self.centralWidget.addWidget(self.mainMenuWidget)
+#         self.centralWidget.setCurrentWidget(self.mainMenuWidget)
 
         self.resize(240, 250)
         self.center()
+        self.play()
 
     def play(self):
         """Rozpoczęcie nowej gry"""

@@ -25,6 +25,7 @@ class Game(QWidget):
         super(Game, self).__init__()
         qApp.installEventFilter(self)
         self.released = True
+        self.game_is_on = False
 
         self.nr_frame = 0
         if replay:
@@ -53,8 +54,12 @@ class Game(QWidget):
         self.botTimer.timeout.connect(lambda: self.board.do_bot_actions(self))
         self.botTimer.start()
 
+        self.game_is_on = True
+
     def paintEvent(self, event):
         """Obsługa rysowania na ekranie"""
+        if not self.game_is_on:
+            return
         painter = QPainter()
         painter.begin(self)
         self.draw_board(painter)
