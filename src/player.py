@@ -26,7 +26,7 @@ class Player(object):
         code_with_args = "console.log(({})({}, {}, {}));".format(
             self.bot.code, board.tiles.tolist(), self.pos_x, self.pos_y)
         sub = subprocess.run(
-            ["node"], input=code_with_args, capture_output=True, text=True)
+            ["node"], input=code_with_args, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if sub.returncode:
             print(sub.stderr)
             return 0

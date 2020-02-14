@@ -128,7 +128,7 @@ class Board(object):
             return
 
         x, y = player.pos_x, player.pos_y
-        self.tiles[x, y] = consts.BOMB
+        self.tiles[x, y] = consts.PLAYER_BOMB
 
         timer = GameTimer(game)
         timer.setInterval(consts.BOMB_SPEED)

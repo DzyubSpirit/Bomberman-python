@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QWidget, QPushButton
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import QTimer#, Qt, QEvent
+
 
 from src import game, bots
 from src import constants as consts
@@ -23,12 +25,24 @@ class Window(QMainWindow):
         self.game = game.Game()
         self.setCentralWidget(self.game)
 #         self.menu()
+        self.game.endGameSignal.connect(self.reload_game)
 
         self.setWindowTitle('Bomberman')
         self.setWindowIcon(QIcon('../res/images/icon.png'))
         self.show()
 
         self.play()
+
+    def reload_game(self):
+        QTimer.singleShot(5000, self.play)
+        
+#         self.endGameTimer = QTimer(self)
+#         self.endGameTimer.setInterval(consts.GAME_SPEED)
+#         self.endGameTimer.timeout.connect(self.repaint)
+#         self.endGameTimer.start(self.play)
+
+
+
 
     def center(self):
         """Wycentrowanie okna gry na ekranie"""

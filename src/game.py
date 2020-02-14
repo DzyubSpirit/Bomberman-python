@@ -2,6 +2,9 @@ from PyQt5.QtWidgets import QWidget, qApp
 from PyQt5.QtCore import QTimer, Qt, QEvent
 from PyQt5.QtGui import QPainter, QPixmap
 
+from PyQt5.QtCore import pyqtSignal
+
+
 import xml.dom.minidom as xml
 import numpy as np
 
@@ -14,6 +17,8 @@ from src.game_timer import GameTimer
 
 class Game(QWidget):
     """Klasa obsługująca mechanikę gry"""
+
+    endGameSignal = pyqtSignal()
 
     def __init__(self, replay=False):
         """Domyślne ustawienia klasy
@@ -97,6 +102,9 @@ class Game(QWidget):
                 elif self.board.tiles[x, y] == consts.EXPLOSION:
                     painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
                         '../res/images/explosion.png'))
+                elif self.board.tiles[x, y] == consts.PLAYER_BOMB:
+                    painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
+                        '../res/images/player_bomb.png'))
                 else:
                     painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
                         '../res/images/wall.png'))
@@ -106,6 +114,11 @@ class Game(QWidget):
 
         if self.board.all_dead() and len(self.timers) == 0:
             self.repaintTimer.stop()
+
+            # write emit timer to the window
+
+            self.endGameSignal.emit()
+
 
     def eventFilter(self, obj, event):
         """Obsługa klawiatury"""
