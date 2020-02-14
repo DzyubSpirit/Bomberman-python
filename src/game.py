@@ -15,7 +15,7 @@ from src.game_timer import GameTimer
 class Game(QWidget):
     """Klasa obsługująca mechanikę gry"""
 
-    def __init__(self, playerNames):
+    def __init__(self, replay=False):
         """Domyślne ustawienia klasy
 
             Args:
@@ -25,9 +25,22 @@ class Game(QWidget):
         super(Game, self).__init__()
         qApp.installEventFilter(self)
         self.released = True
-        self.playerNames = playerNames
 
-        self.board = board.Board(playerNames)
+        self.nr_frame = 0
+        if replay:
+            doc = xml.parse("autosave.xml")
+            self.frames = doc.getElementsByTagName("frame")
+            return
+
+        self.frames = []
+        self.frame = np.ones(
+            (consts.BOARD_WIDTH, consts.BOARD_HEIGHT), dtype=int)
+        self.doc = xml.Document()
+        self.root = self.doc.createElement('save')
+
+    def start(self, bots):
+        self.bots = bots
+        self.board = board.Board(bots)
         self.timers = set()
 
         self.repaintTimer = QTimer(self)
@@ -35,18 +48,6 @@ class Game(QWidget):
         self.repaintTimer.timeout.connect(self.repaint)
         self.repaintTimer.start()
 
-        self.nr_frame = 0
-        if len(self.playerNames) != 0:
-            self.frames = []
-            self.frame = np.ones(
-                (consts.BOARD_WIDTH, consts.BOARD_HEIGHT), dtype=int)
-            self.doc = xml.Document()
-            self.root = self.doc.createElement('save')
-        else:
-            doc = xml.parse("autosave.xml")
-            self.frames = doc.getElementsByTagName("frame")
-
-    def start(self):
         self.botTimer = QTimer(self)
         self.botTimer.setInterval(consts.BOT_SPEED)
         self.botTimer.timeout.connect(lambda: self.board.do_bot_actions(self))
@@ -65,7 +66,7 @@ class Game(QWidget):
         height = consts.TILE_HEIGHT
 
         self.nr_frame += 1
-        if len(self.playerNames) == 0:
+        if len(self.bots) == 0:
             self.get_from_xml()
 
         for x in range(consts.BOARD_WIDTH):
@@ -95,7 +96,7 @@ class Game(QWidget):
                     painter.drawPixmap(pos_x, pos_y, width, height, QPixmap(
                         '../res/images/wall.png'))
 
-        if len(self.playerNames) != 0:
+        if len(self.bots) != 0:
             self.check_changes()
 
         if self.board.all_dead() and len(self.timers) == 0:

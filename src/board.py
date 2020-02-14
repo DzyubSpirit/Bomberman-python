@@ -11,11 +11,13 @@ playerInitialPositions = [
     [(1, 1), (consts.BOARD_WIDTH - 2, consts.BOARD_HEIGHT - 2)],
 ]
 
+code = """ () => Math.floor(Math.random() * 5) """
+
 
 class Board(object):
     """Klasa obsługująca tworzenie i zarządzanie planszą."""
 
-    def __init__(self, playerNames):
+    def __init__(self, bots):
         """Domyślne ustawienia klasy
 
             Args:
@@ -26,9 +28,9 @@ class Board(object):
         self.height = consts.BOARD_HEIGHT
         self.tiles = np.zeros((self.width, self.height), dtype=int)
 
-        initPos = playerInitialPositions[len(playerNames)]
-        self.players = [
-            player.Player(name, initPos[i][0], initPos[i][1]) for i, name in enumerate(playerNames)]
+        initPos = playerInitialPositions[len(bots)]
+        self.players = [player.Player(bot, pos[0], pos[1])
+                        for bot, pos in zip(bots, initPos)]
 
         self.create_board()
         self.board_history = []

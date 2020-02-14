@@ -1,3 +1,4 @@
+import subprocess
 import numpy as np
 
 from src import constants as consts
@@ -6,7 +7,7 @@ from src import constants as consts
 class Player(object):
     """Klasa obsługująca poszczególnych graczy."""
 
-    def __init__(self, name, x, y):
+    def __init__(self, bot, x, y):
         """Domyślne ustawienia klasy
 
             Args:
@@ -15,14 +16,23 @@ class Player(object):
                 y (int): Pozycja y gracza
 
         """
-        self.name = name
+        self.bot = bot
         self.pos_x = x
         self.pos_y = y
         self.bombs = 1
         self.isDead = False
 
     def action(self, board):
-        return np.random.randint(consts.DO_NOTHING, consts.PLANT_BOMB+1)
+        code_with_args = "console.log(({})({}, {}, {}));".format(
+            self.bot.code, board.tiles.tolist(), self.pos_x, self.pos_y)
+        sub = subprocess.run(
+            ["node"], input=code_with_args, capture_output=True, text=True)
+        if sub.returncode:
+            print(sub.stderr)
+            return 0
+
+        action = int(sub.stdout)
+        return action
 
     def move(self, x, y):
         """Przesunięcie gracza na daną pozycje

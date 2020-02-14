@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QStackedWidget, QWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 
-from src import game
+from src import game, bots
 from src import constants as consts
 
 import sys
@@ -20,7 +20,7 @@ class Window(QMainWindow):
         self.centralWidget = QStackedWidget()
         self.setCentralWidget(self.centralWidget)
         self.mainMenuWidget = MainMenu()
-        self.game = game.Game(['test', 'test2'])
+        self.game = game.Game()
         self.menu()
 
         self.setWindowTitle('Bomberman')
@@ -54,12 +54,13 @@ class Window(QMainWindow):
         self.resize(consts.BOARD_WIDTH * consts.TILE_WIDTH,
                     consts.BOARD_HEIGHT * consts.TILE_HEIGHT)
         self.center()
-        self.game.start()
+
+        self.game.start(bots.get())
 
     def replay(self):
         """Odtworzenie powtórki ostatniej gry"""
 
-        self.game = game.Game(0)
+        self.game = game.Game()
         self.setCentralWidget(self.game)
         self.resize(consts.BOARD_WIDTH * consts.TILE_WIDTH,
                     consts.BOARD_HEIGHT * consts.TILE_HEIGHT)
